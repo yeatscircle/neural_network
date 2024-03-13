@@ -38,6 +38,15 @@ class RNN(nn.Module):
         return out
 
 
+def save_checkpoint(state, filename='model.pth.tar'):
+    print('You are trying save model!')
+    torch.save(state, filename)
+
+def load_checkpoint(checkpoint):
+    print('You are trying reading model')
+    model.load_state_dict(checkpoint['state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+
 # device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -49,7 +58,8 @@ hidden_size = 256
 num_classes = 10
 learning_rate = 0.001
 batch_size = 64
-n_epochs = 2
+n_epochs = 5
+load_model = True
 
 # Download data
 train_dataset = datasets.MNIST(root='dataset/', train=True, transform=transforms.ToTensor(), download=True)
@@ -63,8 +73,14 @@ model = RNN(input_size, hidden_size, num_layers, num_classes).to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
+if load_model:
+    load_checkpoint(torch.load('model.pth.tar'))
+
 # Train Network
 for epoch in range(n_epochs):
+    if epoch == 2:
+        checkpoint = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
+        save_checkpoint(checkpoint)
     for batch_idx, (data, targets) in enumerate(train_loader):
         data = data.to(device=device).squeeze(1)
         targets = targets.to(device=device)
