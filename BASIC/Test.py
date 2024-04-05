@@ -183,11 +183,17 @@
 #         	out: (batch size, n_spks)
 #         """
 
-from PIL import Image
-import os
+# from PIL import Image
+# import os
+#
+# ima = Image.open("C:\\Users\\SN\\Desktop\\1000268201_693b08cb0e.jpg")
+import torch
+a = torch.tensor([[[1,2,3],[2,3,4],[1,2,5]],[[1,2,3],[2,3,4],[1,2,5]]])
+print(a.shape)
+b = a.view(a.shape[0],-1)
+print(b)
+print(b.shape)
 
-ima = Image.open("C:\\Users\\SN\\Desktop\\1000268201_693b08cb0e.jpg")
-        
 
 
 

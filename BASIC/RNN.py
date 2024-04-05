@@ -42,10 +42,12 @@ def save_checkpoint(state, filename='model.pth.tar'):
     print('You are trying save model!')
     torch.save(state, filename)
 
+
 def load_checkpoint(checkpoint):
     print('You are trying reading model')
     model.load_state_dict(checkpoint['state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer'])
+
 
 # device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -60,6 +62,7 @@ learning_rate = 0.001
 batch_size = 64
 n_epochs = 5
 load_model = True
+
 
 # Download data
 train_dataset = datasets.MNIST(root='dataset/', train=True, transform=transforms.ToTensor(), download=True)

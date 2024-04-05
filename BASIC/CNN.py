@@ -7,31 +7,36 @@ from torchvision import datasets
 from torchvision import transforms as transforms
 
 
-# Create Fully Connected Network
-class NN(nn.Module):
-    def __init__(self, input_size, num_classes):
-        super(NN, self).__init__()
+# CNN
+class CNN(nn.Module):
+    def __init__(self, in_channels=1, num_classes=10):
+        super(CNN, self).__init__()
+        self.cnn = nn.Sequential(
+            # W_out = [(W_in + 2 * P_w - K_w) / S_w] + 1
+            # H_out = [(H_in + 2 * P_h - K_h) / S_h] + 1
+            # 在使用了偏置项之后使用归一化是多余的
+            nn.Conv2d(in_channels=in_channels, out_channels=8, kernel_size=(3, 3), stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(8),
+            nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2)),
+            nn.Conv2d(in_channels=8, out_channels=16, kernel_size=(3, 3), stride=1, padding=1),
+            nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2)),
+        )
         self.fc = nn.Sequential(
-            nn.Linear(input_size, 50),
-            nn.ReLU(),
-            nn.Linear(50, num_classes),
+            nn.Linear(16 * 7 * 7, num_classes)
         )
 
     def forward(self, x):
+        x = self.cnn(x)
+        x = x.reshape(x.shape[0], -1)
         x = self.fc(x)
         return x
 
-
-# model = NN(20, 10)
-# # 第一个变量为batch_size,第二个为维度
-# tensor = torch.randn(10, 20)
-# print(model.forward(tensor).shape)
 
 # device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Hyperparameters
-input_size = 784
+in_channels = 1
 num_classes = 10
 learning_rate = 0.001
 batch_size = 64
@@ -43,8 +48,7 @@ train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=
 test_dataset = datasets.MNIST(root='dataset/', train=False, transform=transforms.ToTensor(), download=True)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=True)
 
-# initialize network
-model = NN(input_size, num_classes).to(device=device)
+model = CNN(in_channels, num_classes).to(device)
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -54,12 +58,6 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 for epoch in range(n_epochs):
     for batch_idx, (data, targets) in enumerate(train_loader):
         data, targets = data.to(device=device), targets.to(device=device)
-
-        # Get to correct shape
-        # data.shape[0] 获取的是当前批次数据的第一个维度
-        # -1 告诉 reshape 函数自动计算剩余的维度，以便保持数据中元素的总数不变。
-        data = data.reshape(data.shape[0], -1)
-
 
         # forward
         scores = model(data)
@@ -85,8 +83,6 @@ def check_accuracy(loader, model):
     for x, y in loader:
         x = x.to(device=device)
         y = y.to(device=device)
-        x = x.reshape(x.shape[0], -1)
-
 
         with torch.no_grad():
             scores = model(x)
